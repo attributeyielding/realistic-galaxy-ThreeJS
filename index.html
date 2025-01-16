@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
+
+    <title>3D Galaxy with Three.js</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            background: radial-gradient(circle, #000428, #004e92);
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Load Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r146/three.min.js"></script>
+    <script>
+        // Ensure Three.js is loaded before running the script
+        if (THREE) {
+            console.log("Three.js is loaded successfully!");
+        } else {
+            console.error("Three.js failed to load!");
+        }
+
+        // Scene, Camera, Renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+
+
+        // Add Fog for Atmospheric Effect
+        scene.fog = new THREE.Fog(0x000033, 500, 1000);
+
+
+        // Galaxy Background
+        const starGeometry = new THREE.BufferGeometry();
+        const starVertices = [];
+        for (let i = 0; i < 10000; i++) {
+            const x = (Math.random() - 0.5) * 2000;
+            const y = (Math.random() - 0.5) * 2000;
+            const z = (Math.random() - 0.5) * 2000;
+            starVertices.push(x, y, z);
+        }
+        starGeometry.addAttribute('position', new THREE.BufferAttribute(starVertices, 3));
+        const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 1 });
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        // Central Star
+        const starTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/uv_grid_opengl.jpg');
+        const starGeometry2 = new THREE.SphereGeometry(5, 32, 32);
+        const starMaterial2 = new THREE.MeshBasicMaterial({ map: starTexture, color: 0xffff00 });
+        const centralStar = new THREE.Mesh(starGeometry2, starMaterial2);
+        scene.add(centralStar);
+
+        // Planets
+        const planets = [];
+        const planetTextures = [
+            'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', // Earth texture
+            'https://threejs.org/examples/textures/planets/moon_1024.jpg',       // Moon texture (replaced Mars)
+            'https://threejs.org/examples/textures/uv_grid_opengl.jpg'         // Sun texture (replaced Jupiter)
+        ];
+        const planetDistances = [30, 60, 90];
+        const planetSizes = [3, 4, 5];
+
+        planetTextures.forEach((texture, index) => {
+            const planetGeometry = new THREE.SphereGeometry(planetSizes[index], 32, 32);
+            const planetMaterial = new THREE.MeshStandardMaterial({
+                map: new THREE.TextureLoader().load(texture),
+                roughness: 1,
+                metalness: 0
+            });
+            const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+            planet.position.x = planetDistances[index];
+            planets.push(planet);
+            scene.add(planet);
+        });
+
+        // Lighting
+        const pointLight = new THREE.PointLight(0xffffff, 1, 1000);
+        pointLight.position.set(0, 0, 0);
+        scene.add(pointLight);
+
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+
+
+// Space Dust (Particle System)
+const dustGeometry = new THREE.BufferGeometry();
+        const dustVertices = [];
+        for (let i = 0; i < 5000; i++) {
+            const x = (Math.random() - 0.5) * 2000;
+            const y = (Math.random() - 0.5) * 2000;
+            const z = (Math.random() - 0.5) * 2000;
+            dustVertices.push(x, y, z);
+        }
+        dustGeometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(dustVertices), 3));
+        const dustMaterial = new THREE.PointsMaterial({ color: 0x888888, size: 0.5, transparent: true, opacity: 0.8 });
+        const dust = new THREE.Points(dustGeometry, dustMaterial);
+        scene.add(dust);
+
+
+
+        // Camera Position
+        camera.position.z = 150;
+
+
+
+
+          // Mouse Wheel for Zooming
+          const zoomSpeed = 1.5;
+        document.addEventListener('wheel', (e) => {
+            const delta = e.deltaY * 0.01; // Normalize wheel delta
+            camera.position.x += Math.sin(camera.rotation.y) * delta * zoomSpeed;
+            camera.position.z += Math.cos(camera.rotation.y) * delta * zoomSpeed;
+        });
+
+
+ // Mouse Free Look
+ let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        document.addEventListener('mousedown', (e) => {
+            isDragging = true;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+
+                camera.rotation.y -= deltaX * 0.002; // Rotate horizontally
+                camera.rotation.x -= deltaY * 0.002; // Rotate vertically
+                camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x)); // Limit vertical rotation
+            }
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // ZQSD Key Movement
+        const moveSpeed = 0.5;
+        const keys = { z: false, q: false, s: false, d: false };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'z' || e.key === 'Z') keys.z = true;
+            if (e.key === 'q' || e.key === 'Q') keys.q = true;
+            if (e.key === 's' || e.key === 'S') keys.s = true;
+            if (e.key === 'd' || e.key === 'D') keys.d = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'z' || e.key === 'Z') keys.z = false;
+            if (e.key === 'q' || e.key === 'Q') keys.q = false;
+            if (e.key === 's' || e.key === 'S') keys.s = false;
+            if (e.key === 'd' || e.key === 'D') keys.d = false;
+        });
+
+        const updateCameraPosition = () => {
+            if (keys.z) { // Move forward
+                camera.position.x -= Math.sin(camera.rotation.y) * moveSpeed;
+                camera.position.z -= Math.cos(camera.rotation.y) * moveSpeed;
+            }
+            if (keys.s) { // Move backward
+                camera.position.x += Math.sin(camera.rotation.y) * moveSpeed;
+                camera.position.z += Math.cos(camera.rotation.y) * moveSpeed;
+            }
+            if (keys.q) { // Move left
+                camera.position.x -= Math.cos(camera.rotation.y) * moveSpeed;
+                camera.position.z += Math.sin(camera.rotation.y) * moveSpeed;
+            }
+            if (keys.d) { // Move right
+                camera.position.x += Math.cos(camera.rotation.y) * moveSpeed;
+                camera.position.z -= Math.sin(camera.rotation.y) * moveSpeed;
+            }
+        };
+
+
+        // Animation Loop
+        const animate = () => {
+            requestAnimationFrame(animate);
+
+            // Rotate Planets
+            planets.forEach((planet, index) => {
+                planet.rotation.y += 0.01;
+                const angle = Date.now() * 0.0005 * (index + 1);
+                planet.position.x = Math.cos(angle) * planetDistances[index];
+                planet.position.z = Math.sin(angle) * planetDistances[index];
+            });
+
+            // Render Scene
+            renderer.render(scene, camera);
+        };
+
+        animate();
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
