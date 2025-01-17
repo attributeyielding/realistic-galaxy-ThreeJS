@@ -1,6 +1,8 @@
 <!-- Doc 2 is in language en-US. Optimizing Doc 2 for scanning, using lists and bold where appropriate, but keeping language en-US, and adding id attributes to every HTML element: --><h2 id="fxsx06g">What is Three.js?</h2>
 <p id="0t11eg"><strong>Three.js</strong> is a cross-browser JavaScript library and API used to create and display <strong>animated 3D computer graphics</strong> in a web browser. It simplifies the process of working with <strong>WebGL</strong>, making it easier to create complex 3D scenes.</p>
 
+![image](https://github.com/user-attachments/assets/17f83f05-12be-4a9e-8245-22916eecde0b)
+
 <h3 id="tx87jqu">What Might This Project Do?</h3>
 <p id="jv0oiu">Based on the name "realistic-galaxy-ThreeJS," this project probably:</p>
 <ul id="ninmwce">
